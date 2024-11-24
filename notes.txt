@@ -1,0 +1,249 @@
+
+simple example:
+    add ;: fn(a, b) {
+        return a + b
+    }
+
+    print(add(1, 2))
+
+basic:
+    operators:
+        most operators are just shortcuts to Python like dunder methods
+
+        can be used in reassignment (+=):
+        reassignment dunders are not required to use reassignment only to avoid copies
+            +   // addition                 __add__(&:self, other)     +=  // __add_a__(&=self, other)
+            -   // subtraction              __sub__(&:self, other)     -=  // __sub_a__(&=self, other)
+            *   // multiplication           __mul__(&:self, other)     *=  // __mul_a__(&=self, other)
+            /   // division                 __div__(&:self, other)     /=  // __div_a__(&=self, other)
+            %   // remainder                __mod__(&:self, other)     %=  // __mod_a__(&=self, other)
+            ^   // exponent                 __expo__(&:self, other)    ^=  // __expo_a__(&=self, other)
+            &&  // bit and                  __b_and__(&:self, other)   &&= // __b_and_a__(&=self, other)
+            ||  // bit or                   __b_or__(&:self, other)    ||= // __b_or_a__(&=self, other)
+            ^^  // bit xor                  __b_xor__(&:self, other)   ^^= // __b_xor_a__(&=self, other)
+            <<  // bit shift left           __b_shl__(&:self, other)   <<= // __b_shl_a__(&=self, other)
+            >>  // bit shift right          __b_shr__(&:self, other)   >>= // __b_shr_a__(&=self, other)
+
+        ==      // equality                 __eq__(&:self, other)
+        !=      // inequality               __n_eq__(&:self, other)
+        <=      // lesser or equal          __lt_eq__(&:self, other)
+        >=      // greater or equal         __gt_eq__(&:self, other)
+        <       // less than                __lt__(&:self, other)
+        >       // greater than             __gt__(&:self, other)
+        and     // and                      __and__(&:self, other)
+        or      // or                       __or__(&:self, other)
+        ;       // type assertion           __a_type__(&:self, other)
+        ;~      // type interface           __i_type__(&:self, other)
+        ;>      // type conversion          __c_type__(&:self, other)
+        ..      // range                    __range__(&:self, other)
+        ..=     // inclusive range          __i_range__(&:self, other)
+
+        not     // not                      __not__(self)
+        -       // negation                 __neg__(self)
+        ~       // bit not                  __b_not__(self)
+        &=      // var ref
+        &:      // const ref
+
+    postfix operators:
+        ?               // get type
+        .*              // deref
+        (Params)        // call function
+        [Expression]    // index            __get_index__(self, index), __set_index__(self, index, value)
+        .Identifier     // field
+        .>Identifier    // shorthand for function calls injects Self into the first param space
+        .[Expression]   // index field      __get_field__(self, index), __set_field__(self, index, value)
+        .>[Expression]  // shorthand for function calls injects Self into the first param space
+        .{}             // Create type
+
+    extra dunders:
+        __new__()   //called when calling a type like a function
+        __copy__()  //called when assigning a new variable using an old one
+        __drop__()  //called right before a value goes out of scope
+        __debug__() //alternate string conversion for debug print
+
+    special Identifiers:
+        !   // compiler table. contains functions provided by the compiler that are only available at compile time.
+        @   // file table. A munya file is just a table of data.
+            // the file level equivalent of self.
+
+    assignment:
+        variable:
+            x ;= 1
+            
+        constant:
+            x ;: 1
+
+        optional typing:
+            x ; Int64 = 1  // assert type is Int64
+            x ;~ Int64 = 1 // assert type has the same interface as Int64
+            x ;> Int64 = 1 // convert type to Int64
+
+    reassignment:
+        x = 2
+        x += 2
+
+    deconstruction:
+        used to pull values out of structured data
+
+        {x, y} = {1, 2}
+        is equal to
+        a ;= {1, 2}
+        x ;= a[0]
+        y ;= a[1]
+
+        {x := [1], y := [0]} = {1, 2}
+        is equal to
+        a ;= {1, 2}
+        x ;= a[1]
+        y ;= a[0]
+
+        {x ;= [0] + [1]} = {1, 2}
+        is equal to
+        a ;= {1, 2}
+        x ;= a[0] + a[1]
+
+
+    flow control:
+        return
+        return Expression
+
+        break
+        break Expression        //outputs Expression from the code block the break is in
+        break<tag>              //tags tell the break what nested block to return from
+        break<tag> Expression
+        continue
+        continue<tag>
+
+    do blocks:
+        {} is used by table literals so code blocks start with do
+
+        do {code} // basic
+        do <break tag> {code}   // tagged
+        do {} while Expression  // do while
+
+    if block:
+        if <break tag> Expression {}
+
+        Python like if:
+            if Expression {}
+            elif Expression {}
+            else {}
+
+        C like switch:
+            if |Expression| a,b {}
+            elif c,d {}
+            else {}
+
+        Rust like match:
+            if |Expression| var ;= a,b {}
+            elif var ;= c,d {}
+            else {}
+
+    while block:
+        while<break tag> Expression {}
+
+        Python like while:
+            while Expression {}
+            else {}
+
+        Rust like for:
+            while x ;= Expression {}    // runs the expression until it returns nil
+            while x ;= in Value {}      // if the value has __next__ function runs that until it returns nil
+                                        // if the value has no __next__ runs __iter__ and uses __next__ on its output
+
+    functions:
+        all functions are function pointers and are stored in variables
+        x ;: fn(){}
+
+        return types:
+            x ;: fn(); TYPE {}  // same type functions as assignment
+            x ;: fn();~ TYPE {}
+            x ;: fn();> TYPE {}
+        
+        params:
+            x ;: fn(param, x) {}        //params default to constant
+            x ;: fn(param; Type, x) {}  //optional typing
+            x ;: fn(param ;: , x) {}    //explicit const 
+            x ;: fn(param ;= , x) {}    //variable param 
+            x ;: fn(param ;: 7, x) {}   //const with default value
+            x ;: fn(param ;= 7, x) {}   //variable with default value
+
+        priority:
+            you can assign multiple functions to the same name
+            when you call the function the compiler will go through the list and use the first version that fits the way it was used
+
+            1) add ;: fn(a, b){}            //function with no type restrictions
+            2) add ;: fn(a;I64, b;I64){}    //function with type restrictions
+            3) add(7;I32, 3;I32)            //this will call the first function because it was added first and it matches the pattern
+            3) add(7;I64, 3;I64)            //this also calls the first function because it was added first and it matches the pattern
+
+            here you can never get to the 2nd version of add because the first one is high priority and too permissive
+
+            1) add ;: fn<-1>(a, b){}        //the tag lowers the priority to -1
+            2) add ;: fn<0>(a;I64, b;I64){} //this tag does nothing as the default priority is zero
+            3) add(7;I32, 3;I32)            //this still calls the first version because it cant use the higher priority function
+            3) add(7;I64, 3;I64)            //this function uses the function on line 2
+
+
+compiler functions:
+    compile functions are in the "!" table and are only available at compile time
+
+    !.lang       ;: {}       // table of available language translators
+    !.insert     ;: fn(val)  // inserts a new munya statement into the source code. used in macros
+    !.val        ;: {}       // table of all statement types as values. use in !.insert()
+    !.no_compile ;: fn(str)  // inserts the given string into the output file without translation
+
+    // imports another munya file, relative paths for local files.
+    !.require    ;: fn(path, version) // using just the file name requires a version, and has compiler to find it, 
+
+macros:
+    functions tagged with an ! "fn!(){}"
+    macros are run at compile time
+    after macros are run they are replaced with the statements that where created using !.insert()
+    params passed to macros are represented as tables {type::, name::, value::}
+
+translation:
+    !.lang ;: Language.{
+        core  ;: {},               // how to translate bare minimum components of munya
+        std   ;: {},               // best effort implementation of the munya standard library
+        public  ;: {},             // list of other functions/values to translate munya that are available to use in code.
+        build ;: Fn(args:={}):Any, // how to compile language
+        run   ;: Fn(args:={}):Any, // how to run language
+    }
+
+core types:
+    Type:
+        like a C struct
+        collection of named values
+
+        MyType ;: Type.{
+            one ;= 1,
+            two ;= 2,
+        }
+
+        x_type = MyType.{}
+
+        x_type.one
+        x_type.["two"]
+
+    Enum:
+        like a Rust enum
+        collection of named values where only one can be set at a time
+
+        MyEnum ;: Enum.{
+            one ;: 1,
+            two ;= MyType,
+        }
+
+        x_enum = MyEnum.{two=MyType.{}}
+        {y} = x_enum // unwrap to get value
+        z = x_enum.*  // unwrap to get value
+        y == z
+
+        ~x_enum // __drop__ for enums (should never have to do this manually)
+
+        if |x_enum| x ;= MyEnum.one {
+            
+        } elif x ;= MyEnum.two {
+
+        }
